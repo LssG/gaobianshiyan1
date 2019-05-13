@@ -17,6 +17,7 @@ using namespace std;
 
 // #define SERVER_IP "172.19.79.179"
 #define SERVER_IP "127.0.0.1"
+#define SERVER_PORT 7171
 
 #define _ADD	1
 #define _REM	2
@@ -172,7 +173,7 @@ void sig_winch(int sig){
 }
 
 
-int  main(int argn,char* argv[]){
+int  main(int argc,char* argv[]){
 	main_pid = getpid();
 
 	signal(SIGINT,sig_fun);
@@ -185,7 +186,19 @@ int  main(int argn,char* argv[]){
 	int new_fd = -1,admin_fd;
 	socklen_t len;
 	struct sockaddr_in my_addr,their_addr,admin_addr;
-	unsigned int myport = 7171,lisnum;
+	unsigned int myport = SERVER_PORT,lisnum;
+
+	if(argc == 3){
+		my_ip = argv[1];
+		myport = atoi(argv[2]);
+	}
+	else if(argc == 2){
+		my_ip = argv[1];
+	}
+	else if(argc > 3){
+		printf("error!\nInvalid number of arguments!\n");
+		exit(0);
+	}
 
 	if((socketfd = socket(AF_INET,SOCK_STREAM,0)) == -1){
 		perror("socket");

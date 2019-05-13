@@ -13,8 +13,8 @@ using namespace std;
 #define MAXSIZE 1024
 
 #define SERVER_PORT	7171
-#define SERVER_IP	"101.132.162.118"
-// #define SERVER_IP	"127.0.0.1"
+// #define SERVER_IP	"101.132.162.118"
+#define SERVER_IP	"127.0.0.1"
 int sockfd;
 
 void closeAll(){
@@ -37,7 +37,19 @@ int main(int argc, char* argv[]){
 	socklen_t soclen;
 	char isrun = 1;
 	char buf[MAXSIZE+1];
-	
+
+
+	if(argc == 3){
+		dest_ip = argv[1];
+		dest_port = atoi(argv[2]);
+	}
+	else if(argc == 2){
+		dest_ip = argv[1];
+	}
+	else if(argc > 3){
+		printf("error!\nInvalid number of arguments!\n");
+		exit(0);
+	}
 
 	struct sockaddr_in dest;
 	bzero(&dest,sizeof(dest));
