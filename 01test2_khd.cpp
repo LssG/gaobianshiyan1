@@ -24,16 +24,6 @@ short dest_port = SERVER_PORT;
 socklen_t soclen;
 char fsbuf[MAXSIZE+1],jsbuf[MAXSIZE+1];
 
-void closeAll(){
-	shutdown(sockfd,SHUT_RDWR);
-	close(sockfd);
-	exit(0);
-}
-
-void sig_int(int sig){
-	closeAll();
-}
-
 void *fasong(void *arg){
 	while(isrun){
 		bzero(&fsbuf,MAXSIZE+1);
