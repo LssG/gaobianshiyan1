@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <signal.h>
+#include <pthread.h>
 using namespace std;
 
 #define MAXSIZE 1024
@@ -16,6 +16,13 @@ using namespace std;
 // #define SERVER_IP	"101.132.162.118"
 #define SERVER_IP	"127.0.0.1"
 int sockfd;
+char isrun = 1;
+
+int len;
+char *dest_ip = SERVER_IP;
+short dest_port = SERVER_PORT;
+socklen_t soclen;
+char fsbuf[MAXSIZE+1],jsbuf[MAXSIZE+1];
 
 void closeAll(){
 	shutdown(sockfd,SHUT_RDWR);
@@ -27,16 +34,24 @@ void sig_int(int sig){
 	closeAll();
 }
 
+void *fasong(void *arg){
+	while(isrun){
+		bzero(&fsbuf,MAXSIZE+1);
+		printf("pls send message to send(input \"exit\" to exit):");
+		fgets(fsbuf,MAXSIZE,stdin);
+		if(!strncasecmp(fsbuf,"exit",4)){
+			printf("i will close the connect!\n");
+			isrun = 0;
+		}
+		len = write(sockfd,fsbuf,strlen(fsbuf) - 1);
+		if(len < 0){
+			printf("send failure , errno code is %d.\n",errno);
+			isrun = 0;
+		}
+	}
+}
+
 int main(int argc, char* argv[]){
-
-	signal(SIGINT,sig_int);
-
-	int len;
-	char *dest_ip = SERVER_IP;
-	short dest_port = SERVER_PORT;
-	socklen_t soclen;
-	char isrun = 1;
-	char buf[MAXSIZE+1];
 
 
 	if(argc == 3){
@@ -66,48 +81,36 @@ int main(int argc, char* argv[]){
 		exit(EXIT_FAILURE);
 	}
 	printf("server connected\n");
+	// printf("test:adsdsdasda");
 
-	pid_t pid;
-	pid = fork();
-	if(pid < 0){
-		perror("fork");
-		exit(EXIT_FAILURE);
-	}
-	else if(pid == 0){			//子进程发送数据
-		while(isrun){
-			bzero(&buf,MAXSIZE+1);
-			printf("pls send message to send(input \"exit\" to exit):");
-			fgets(buf,MAXSIZE,stdin);
-			if(!strncasecmp(buf,"exit",4)){
-				printf("i will close the connect!\n");
-				isrun = 0;
-			}
-			len = write(sockfd,buf,strlen(buf) - 1);
-			if(len < 0){
-				printf("send failure , errno code is %d.\n",errno);
-				isrun = 0;
-			}
+	pthread_t tid;
+	pthread_create(&tid,NULL,fasong,NULL);
+
+	// printf("test:aaa");
+
+	while(isrun){				//接收数据进程
+		bzero(&jsbuf,MAXSIZE+1);
+		len = recv(sockfd,jsbuf,MAXSIZE,0);
+		if(len < 0){
+			printf("recv failure , errno code is %d.\n",errno);
+			isrun = 0;
+			break;
+		}else if(len == 0){
+			printf("\nserver closed!Pause the \"Enter\" to exit!\n");
+			isrun = 0;
+			break;
 		}
-	}
-	else{						//父进程接收数据
-		while(isrun){
-			bzero(&buf,MAXSIZE+1);
-			len = recv(sockfd,buf,MAXSIZE,0);
-			if(len < 0){
-				printf("recv failure , errno code is %d.\n",errno);
-				break;
-			}else if(len == 0){
-				printf("\nserver closed!\n");
-				break;
-			}
-			if(!strncasecmp(buf,"exit",4)){
-				printf("server will close the connect!\n");
-				break;
-			}
-			
-			printf("\nmessage recv successful :'%s' %dBytes recv.\n",buf,len);
+		if(!strncasecmp(jsbuf,"exit",4)){
+			// printf("server will close the connect!\n");
+			isrun = 0;
+			break;
 		}
+		printf("\nmessage recv successful :'%s' %dBytes recv.\n",jsbuf,len);
 	}
-	kill(0,SIGINT);
+
+	// printf("test:exit\n");
+	pthread_join(tid,NULL);
+	// printf("test:%d exit\n",tid);
+
 	return 0;
 }
