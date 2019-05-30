@@ -92,6 +92,7 @@ int main(int argc, char* argv[]){
 		}
 		if(!strncasecmp(jsbuf,"exit",4)){
 			// printf("server will close the connect!\n");
+			printf("\nserver closed!Pause the \"Enter\" to exit!\n");
 			isrun = 0;
 			break;
 		}
