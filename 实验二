@@ -1,7 +1,4 @@
-思路：
-	设置多个标志量，表示程序整体运行状态
-	
-	线程相关函数：
+线程相关函数：
 	pthread_create(pthread_t*,描述进程属性的结构体指针,函数指针，void*)创建一个线程
 	pthread_join(pthread_t,void**)等待第一个参数对应的线程执行完毕
 	pthread_detach(pthread_t)将参数指定的线程与主线程分离
