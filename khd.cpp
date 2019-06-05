@@ -11,6 +11,7 @@
 using namespace std;
 
 #define MAXSIZE 1024
+#define NAMEMAXSIZE 10
 
 #define SERVER_PORT	7171
 // #define SERVER_IP	"101.132.162.118"
@@ -18,13 +19,14 @@ using namespace std;
 int sockfd;
 char isrun = 1;
 
-int len;
 char *dest_ip = SERVER_IP;
 short dest_port = SERVER_PORT;
 socklen_t soclen;
 char fsbuf[MAXSIZE+1],jsbuf[MAXSIZE+1];
+char name[NAMEMAXSIZE+1];
 
 void *fasong(void *arg){
+	int len;
 	while(isrun){
 		bzero(&fsbuf,MAXSIZE+1);
 		printf("pls send message to send(input \"exit\" to exit):");
@@ -43,24 +45,13 @@ void *fasong(void *arg){
 
 int main(int argc, char* argv[]){
 
-
-	if(argc == 3){
-		dest_ip = argv[1];
-		dest_port = atoi(argv[2]);
-	}
-	else if(argc == 2){
-		dest_ip = argv[1];
-	}
-	else if(argc > 3){
-		printf("error!\nInvalid number of arguments!\n");
-		exit(0);
-	}
-
 	struct sockaddr_in dest;
 	bzero(&dest,sizeof(dest));
 	dest.sin_family = AF_INET;
 	dest.sin_port = htons(dest_port);
 	dest.sin_addr.s_addr = inet_addr(dest_ip);
+	int len;
+
 
 	if((sockfd = socket(AF_INET,SOCK_STREAM,0)) == -1){
 		perror("socket");
@@ -72,6 +63,30 @@ int main(int argc, char* argv[]){
 	}
 	printf("server connected\n");
 	// printf("test:adsdsdasda");
+
+	cout<< "请输入暗号(0~255)：";
+	unsigned char roomnum;
+	cin>>roomnum;
+	cout << "请输入用户名（3~10个字符，只能包括英文和数字）：";
+	cin >> name;
+	len = write(sockfd,&roomnum,1);
+	if(len < 0){
+		printf("send failure , errno code is %d.\n",errno);
+		isrun = 0;
+	}
+	len = recv(sockfd,jsbuf,MAXSIZE,0);
+	if(len <= 0){
+		printf("recv failure , errno code is %d.\n",errno);
+		exit(0);
+	}
+	if(!strncasecmp(jsbuf,"0",1)){
+		cout << "Waiting for others..."<<endl;
+		len = recv(sockfd,jsbuf,MAXSIZE,0);
+		if(len <= 0){
+			printf("recv failure , errno code is %d.\n",errno);
+			exit(0);
+		}
+	}
 
 	pthread_t tid;
 	pthread_create(&tid,NULL,fasong,NULL);
