@@ -19,6 +19,7 @@ using namespace std;
 // #define SERVER_IP "172.19.79.179"
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 7171
+#define MAXROOM 256
 
 #define _ADD	1
 #define _REM	2
@@ -35,8 +36,9 @@ struct socket_type
 	}
 };
 
+// int roomnum[256];
 int socketfd = -1;
-list<socket_type> sockaddrs;
+list<socket_type> sockaddrs[MAXROOM];
 
 void closeAll();
 
