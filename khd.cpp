@@ -26,7 +26,7 @@ short dest_port = SERVER_PORT;
 socklen_t soclen;
 char jsbuf[MAXSIZE];
 string name;
-char roomnum;
+unsigned char roomnum;
 string fsbuf;
 
 void *fasong(void *arg);
@@ -57,7 +57,8 @@ int main(int argc, char* argv[]){
 	cout<< "请输入房间号(0~255)：";
 	int tmp;
 	cin>>tmp;
-	roomnum = (char)tmp;
+	cin.ignore(MAXSIZE,'\n');
+	roomnum = (unsigned char)tmp;
 	cout << "请输入用户名（3~10个字符，只能包括英文和数字）：";
 	cin >> name;
 	len = write(sockfd,&roomnum,1);
@@ -79,6 +80,8 @@ int main(int argc, char* argv[]){
 			exit(0);
 		}
 	}
+	fsbuf = name+" is online!";
+	len = write(sockfd,fsbuf.data(),fsbuf.length());
 
 	pthread_t tid;
 	pthread_create(&tid,NULL,fasong,NULL);
@@ -105,7 +108,7 @@ int main(int argc, char* argv[]){
 			isrun = 0;
 			break;
 		}
-		cout<< jsbuf;
+		cout<< jsbuf <<endl;
 	}
 
 	// printf("test:exit\n");
@@ -120,17 +123,21 @@ void *fasong(void *arg){
 	char tmp[MAXSIZE];
 	while(isrun){
 		// printf("pls send message to send(input \"exit\" to exit):");
-		cin.get(tmp,MAXSIZE);
+		// cin.get(tmp,MAXSIZE);
+		// cin.ignore(MAXSIZE,'\n');
+		// cin>>tmp;
+		// cin.flush();
+		cin.getline(tmp,MAXSIZE);
 		fsbuf = name;
 		fsbuf.append(":\t");
 		fsbuf.append(tmp);
-		fsbuf+="\n";
+		// fsbuf+="\n";
 		len = write(sockfd,fsbuf.data(),fsbuf.length());
 		if(len < 0){
 			printf("send failure , errno code is %d.\n",errno);
 			isrun = 0;
 		}
-		if(tmp=="exit"){
+		if(!strncasecmp(tmp,"exit",4)){
 			printf("i will close the connect!\n");
 			len = write(sockfd,tmp,strlen(tmp));
 			isrun = 0;

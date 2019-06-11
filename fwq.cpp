@@ -86,7 +86,7 @@ int  main(int argc,char* argv[]){
 		closeAll();
 		exit(EXIT_FAILURE);
 	}
-	// printf("wait for connect.\n");
+	// //printf("wait for connect.\n");
 	// pthread_create(&tid,NULL,admin_woeker,NULL);
 	len = sizeof(struct sockaddr);
 
@@ -98,7 +98,7 @@ int  main(int argc,char* argv[]){
 
 		//向地址链表中添加链接
 		// sockaddrcon(_ADD,tmp);
-		// cout<<"server:got connection from " << inet_ntoa(their_addr.sin_addr) << ":" << ntohs(their_addr.sin_port) << ", socket " << new_fd<<endl;
+		// //cout<<"server:got connection from " << inet_ntoa(their_addr.sin_addr) << ":" << ntohs(their_addr.sin_port) << ", socket " << new_fd<<endl;
 		
 	}
 	perror("accept");
@@ -118,7 +118,7 @@ void *khd_worker(void *arg){
 
 	bzero(buf,MAXSIZE+1);
 	len = recv(new_fd,buf,MAXSIZE,0);
-	tmp.room = (int)buf[0];
+	tmp.room = (int)((unsigned char)buf[0]);
 	//向地址链表中添加链接
 	sockaddrcon(tmp.room,_ADD,tmp);
 	buf[0] = (char)(sockaddrs[tmp.room].size());
@@ -128,16 +128,17 @@ void *khd_worker(void *arg){
 		len = recv(new_fd,buf,MAXSIZE,0);
 		if(len > 0){
 			if(!strncasecmp(buf,"exit",4)){
-				printf("client %s:%d will close the connect!\n",inet_ntoa(their_addr.sin_addr),ntohs(their_addr.sin_port));
+				//printf("client %s:%d will close the connect!\n",inet_ntoa(their_addr.sin_addr),ntohs(their_addr.sin_port));
 				sockaddrcon(tmp.room,_REM,tmp);
 				break;
 			}
-			sendmestoroom(tmp,buf,strlen(buf));
+			if(len > 4)
+				sendmestoroom(tmp,buf,strlen(buf));
 		}else if(len < 0){
-			printf("recv failure , errno code is %d.\n",errno);
+			//printf("recv failure , errno code is %d.\n",errno);
 			break;
 		}else{
-			printf("the other one close quit\n");
+			//printf("the other one close quit\n");
 			break;
 		}
 	}
@@ -165,7 +166,7 @@ void sendmes(int fd,char* mes,size_t mlen){
 		// closeAll();
 		exit(errno);
 	}else if(len>0){
-		printf("message successful!\n");
+		//printf("message successful!\n");
 	}else{
 		//cout << "test:len = 0" <<endl;
 	}
