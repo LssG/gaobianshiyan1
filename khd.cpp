@@ -24,9 +24,10 @@ char isrun = 1;
 char* dest_ip = SERVER_IP;
 short dest_port = SERVER_PORT;
 socklen_t soclen;
-char fsbuf[MAXSIZE],jsbuf[MAXSIZE];
+char jsbuf[MAXSIZE];
 string name;
 char roomnum;
+string fsbuf;
 
 void *fasong(void *arg);
 // string [] fenge(string str);
@@ -69,7 +70,8 @@ int main(int argc, char* argv[]){
 		printf("recv failure , errno code is %d.\n",errno);
 		exit(0);
 	}
-	if(!strncasecmp(jsbuf,"0",1)){
+	char bijiaotmp = 1;
+	if(!strncasecmp(jsbuf,&bijiaotmp,1)){
 		cout << "Waiting for others..."<<endl;
 		len = recv(sockfd,jsbuf,MAXSIZE,0);
 		if(len <= 0){
@@ -92,16 +94,18 @@ int main(int argc, char* argv[]){
 			isrun = 0;
 			break;
 		}else if(len == 0){
-			printf("\nserver closed!Pause the \"Enter\" to exit!\n");
+			// printf("\nserver closed!Pause the \"Enter\" to exit!\n");
 			isrun = 0;
 			break;
+		}else if(len == 1){
+			continue;
 		}
 		if(!strncasecmp(jsbuf,"exit",4)){
 			// printf("server will close the connect!\n");
 			isrun = 0;
 			break;
 		}
-		printf("\nmessage recv successful :'%s' %dBytes recv.\n",jsbuf,len);
+		cout<< jsbuf;
 	}
 
 	// printf("test:exit\n");
@@ -113,32 +117,27 @@ int main(int argc, char* argv[]){
 
 void *fasong(void *arg){
 	int len;
-	string tmp = "";
+	char tmp[MAXSIZE];
 	while(isrun){
-		printf("pls send message to send(input \"exit\" to exit):");
-		cin>>tmp;
+		// printf("pls send message to send(input \"exit\" to exit):");
+		cin.get(tmp,MAXSIZE);
+		fsbuf = name;
+		fsbuf.append(":\t");
+		fsbuf.append(tmp);
+		fsbuf+="\n";
+		len = write(sockfd,fsbuf.data(),fsbuf.length());
+		if(len < 0){
+			printf("send failure , errno code is %d.\n",errno);
+			isrun = 0;
+		}
 		if(tmp=="exit"){
 			printf("i will close the connect!\n");
-			len = write(sockfd,tmp.data(),tmp.length());
+			len = write(sockfd,tmp,strlen(tmp));
+			isrun = 0;
 			if(len < 0){
 				printf("send failure , errno code is %d.\n",errno);
 				break;
 			}
-		}
-		len = write(sockfd,&roomnum,1);
-		if(len < 0){
-			printf("send failure , errno code is %d.\n",errno);
-			isrun = 0;
-		}
-		len = write(sockfd,name.data(),name.length());
-		if(len < 0){
-			printf("send failure , errno code is %d.\n",errno);
-			isrun = 0;
-		}
-		len = write(sockfd,tmp.data(),tmp.length());
-		if(len < 0){
-			printf("send failure , errno code is %d.\n",errno);
-			isrun = 0;
 		}
 	}
 }
