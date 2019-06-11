@@ -1,13 +1,15 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netinet/in.h>
-#include <stdio.h>
+#include <iostream>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <string>
+#include <stdio.h>
 using namespace std;
 
 #define MAXSIZE 1024
@@ -19,29 +21,16 @@ using namespace std;
 int sockfd;
 char isrun = 1;
 
-char *dest_ip = SERVER_IP;
+char* dest_ip = SERVER_IP;
 short dest_port = SERVER_PORT;
 socklen_t soclen;
-char fsbuf[MAXSIZE+1],jsbuf[MAXSIZE+1];
-char name[NAMEMAXSIZE+1];
+char fsbuf[MAXSIZE],jsbuf[MAXSIZE];
+string name;
+char roomnum;
 
-void *fasong(void *arg){
-	int len;
-	while(isrun){
-		bzero(&fsbuf,MAXSIZE+1);
-		printf("pls send message to send(input \"exit\" to exit):");
-		fgets(fsbuf,MAXSIZE,stdin);
-		if(!strncasecmp(fsbuf,"exit",4)){
-			printf("i will close the connect!\n");
-			isrun = 0;
-		}
-		len = write(sockfd,fsbuf,strlen(fsbuf) - 1);
-		if(len < 0){
-			printf("send failure , errno code is %d.\n",errno);
-			isrun = 0;
-		}
-	}
-}
+void *fasong(void *arg);
+// string [] fenge(string str);
+
 
 int main(int argc, char* argv[]){
 
@@ -64,9 +53,10 @@ int main(int argc, char* argv[]){
 	printf("server connected\n");
 	// printf("test:adsdsdasda");
 
-	cout<< "请输入暗号(0~255)：";
-	unsigned char roomnum;
-	cin>>roomnum;
+	cout<< "请输入房间号(0~255)：";
+	int tmp;
+	cin>>tmp;
+	roomnum = (char)tmp;
 	cout << "请输入用户名（3~10个字符，只能包括英文和数字）：";
 	cin >> name;
 	len = write(sockfd,&roomnum,1);
@@ -94,6 +84,7 @@ int main(int argc, char* argv[]){
 	// printf("test:aaa");
 
 	while(isrun){				//接收数据进程
+		char jsbuf[MAXSIZE+1];
 		bzero(&jsbuf,MAXSIZE+1);
 		len = recv(sockfd,jsbuf,MAXSIZE,0);
 		if(len < 0){
@@ -119,3 +110,43 @@ int main(int argc, char* argv[]){
 
 	return 0;
 }
+
+void *fasong(void *arg){
+	int len;
+	string tmp = "";
+	while(isrun){
+		printf("pls send message to send(input \"exit\" to exit):");
+		cin>>tmp;
+		if(tmp=="exit"){
+			printf("i will close the connect!\n");
+			len = write(sockfd,tmp.data(),tmp.length());
+			if(len < 0){
+				printf("send failure , errno code is %d.\n",errno);
+				break;
+			}
+		}
+		len = write(sockfd,&roomnum,1);
+		if(len < 0){
+			printf("send failure , errno code is %d.\n",errno);
+			isrun = 0;
+		}
+		len = write(sockfd,name.data(),name.length());
+		if(len < 0){
+			printf("send failure , errno code is %d.\n",errno);
+			isrun = 0;
+		}
+		len = write(sockfd,tmp.data(),tmp.length());
+		if(len < 0){
+			printf("send failure , errno code is %d.\n",errno);
+			isrun = 0;
+		}
+	}
+}
+
+// string [] fenge(string str){
+// 	unsigned int len;
+// 	len = find_last_of('~',0);
+// 	string strs[3];
+// 	strs[2] = str.substr(len);
+
+// }
